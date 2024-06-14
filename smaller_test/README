@@ -1,3 +1,4 @@
 In this testing dataset you will find two zip files with all the input images and their corresponding ground truth images. Some networks require a text file citing all the images, which is also provided here (allweather.txt)
+
 If you wish to modify the dataset adding or removing images, make sure the gt image has the same name as input. You can simplify this task using two provided scripts: call check.py with the name of the folders as parameters and it will check whether both folders have the same images; with the --delete true parameter, differing images are removed. Additionally, create_txt.py generates and saves the allweather.txt file in the folder.
 
