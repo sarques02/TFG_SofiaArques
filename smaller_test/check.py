@@ -41,9 +41,9 @@ def compare_images(folder1, folder2, delete=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compare images in two folders and optionally delete the different ones")
-    parser.add_argument("folder1", type=str, help="Path to the first folder")
-    parser.add_argument("folder2", type=str, help="Path to the second folder")
-    parser.add_argument("--delete", action="store_true", help="Delete different images if specified")
+    parser.add_argument("folder1", type=str, default="./input", help="Path to the first folder")
+    parser.add_argument("folder2", type=str, default="./gt" help="Path to the second folder")
+    parser.add_argument("-delete", action="store_true", default="False" help="Delete different images if specified")
     
     args = parser.parse_args()
     
