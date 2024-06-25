@@ -21,7 +21,7 @@ import network_model3 as Student_snow
 
 # Testing settings
 parser = argparse.ArgumentParser(description='pix2pix-pytorch-implementation')
-parser.add_argument('--dataset', default='../../TransWeather_Quantization/data/smaller_test', required=False, help='facades')
+parser.add_argument('--dataset', default='../smaller_test', required=False, help='facades')
 parser.add_argument('--test_batch_size', type=int, default=1, help='testing batch size')
 parser.add_argument('--cuda', default= False, action='store_false',  help='use cuda')
 parser.add_argument('--factor', default= 4, type=int)
@@ -40,14 +40,14 @@ print(device)
 
 
 if opt.KD:
-    d1_path = f"../models/net1/factor{factor_value}/BestStudent.pth"
-    d2_path = f"../models/net2/factor{factor_value}/BestStudent.pth"
-    d3_path = f"../models/net3/factor{factor_value}/BestStudent.pth"
+    d1_path = f"../models/KD/net1factor{factor_value}.pth"
+    d2_path =  f"../models/KD/net2factor{factor_value}.pth"
+    d3_path =  f"../models/KD/net3factor{factor_value}.pth"
     save_img_path = f"results/KD_Model/factor{factor_value}" #Carpeta donde se guardan las imágenes
 else:
-    d1_path = f"../OnlyStudent/net1/factor{factor_value}/BestStudent.pth"
-    d2_path = f"../OnlyStudent/net2/factor{factor_value}/BestStudent.pth"
-    d3_path = f"../OnlyStudent/net3/factor{factor_value}/BestStudent.pth"
+    d1_path = f"../LightModel/net1factor{factor_value}.pth"
+    d2_path = f"../LightModel/net2factor{factor_value}.pth"
+    d3_path = f"../LightModel/net3factor{factor_value}.pth"
     save_img_path = f"results/Only_Student/factor{factor_value}" #Carpeta donde se guardan las imágenes
     
 
