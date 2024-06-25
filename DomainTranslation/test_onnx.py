@@ -3,10 +3,6 @@ from __future__ import print_function
 import argparse
 import os
 import cv2
-import sys
-
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(parent_dir)
 import torch
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
@@ -16,21 +12,16 @@ torch.backends.cudnn.benchmark = True
 from metrics import *
 import time
 import ast 
-import torch
-import torchvision.transforms as transforms
 
-from utils import is_image_file, load_img, save_img
-torch.backends.cudnn.benchmark = True
 import onnxruntime as ort
 import onnx
-import time
 import numpy as np
 from PIL import Image
 
 # Testing settings
 parser = argparse.ArgumentParser(description='pix2pix-pytorch-implementation')
-parser.add_argument('--dataset', default='../../TransWeather_Quantization/data/smaller_test', required=False, help='facades')
-parser.add_argument('--save_path', default='results/KD_onnx', required=False, help='facades')
+parser.add_argument('--dataset', default='../smaller_test', required=False, help='facades')
+parser.add_argument('--save_path', default='results/Onnx', required=False, help='facades')
 parser.add_argument('--test_batch_size', type=int, default=1, help='testing batch size')
 parser.add_argument('--cuda', default= True, action='store_false',  help='use cuda')
 opt = parser.parse_args()
@@ -40,11 +31,11 @@ tiempos_imagenes = {}
 
 #falta og e int8
 
-Knowledge = 'KD_'
+Knowledge = 'KD_' # Dejar vacio para evaluar los modelos originales
 
-type_net = "og" ## Elegir entre: og (original), fp16, int8
+type_net = "og" # Elegir entre: og (original), fp16, int8
 
-onnx_path = '..'
+onnx_path = 'onnx_models/KD/{type_net}' #Path a la carpeta con los modelos
 
 onnx.load(f'{onnx_path}/{Knowledge}domain_{type_net}.onnx')
 ort_sess = ort.InferenceSession(f'{onnx_path}/{Knowledge}domain_{type_net}.onnx')
