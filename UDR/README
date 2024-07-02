@@ -1,1 +1,4 @@
 UDR-S2Former_deraining network
+
+In this folder you will find the codes for ONNX conversion, quantization, Knowledge Distillation training and testing for both pytorch models and ONNX models.
+The base network and code are taken from: https://github.com/Ephemeral182/UDR-S2Former_deraining
