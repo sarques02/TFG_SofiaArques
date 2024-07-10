@@ -136,12 +136,6 @@ def tenc_loss(student_outputs, teacher_outputs):
     total_loss = sum(losses) / len(losses)
     return total_loss
 
-#Penalización de brillo bajo
-def brightness_penalty(pred_image, factor=0.1):
-    mean_pixel_value = pred_image.mean()
-    penalty = torch.clamp((0.5 - mean_pixel_value) ** 2, min=0)
-    return factor * penalty
-
 def batch_PSNR(img1, img2, data_range):
     """Calcula el PSNR para un batch de imágenes.
     
@@ -171,7 +165,7 @@ def train_student(student, teacher, optimizer, train_loader, device):
         with torch.no_grad():
             teacher_pred_image, teacher_encoder,_ = teacher(input_image)
 
-        soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image) + brightness_penalty(student_pred_image)
+        soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image)
         tenc_l = tenc_loss(student_encoder, teacher_encoder)
         hard_targets = mse_loss(student_pred_image, gt)
         loss = 0.3 * soft_targets_loss + 0.3 * tenc_l + 0.4 * hard_targets
@@ -198,7 +192,7 @@ def validate(student, teacher, val_data_loader, device):
             student_pred_image, student_encoder, _ = student(input_image)
             teacher_pred_image, teacher_encoder, _ = teacher(input_image)
 
-            soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image) + brightness_penalty(student_pred_image)
+            soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image)
             tenc_l = tenc_loss(student_encoder, teacher_encoder)
             hard_targets = mse_loss(student_pred_image, gt)
             loss = 0.3 * soft_targets_loss + 0.3 * tenc_l + 0.4 * hard_targets
