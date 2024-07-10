@@ -6,12 +6,12 @@ En esta carpeta se encuentran los ficheros para transformar en onnx, cuantificar
 ## Ficheros test
 Dos ficheros de test, guardan imágenes y ficheros con tiempos y métricas (mse, psnr, ssim):
 1. test_metrics: para ficheros pytorch. 
-- Con --test_batch_size el tamaño de batch, por defecto a 1
-- Con --model el tipo de modelo a cargar, 0 original, 1 KD, 2 Light, 3 Encoder, 4 decoder
+	- Con --test_batch_size el tamaño de batch, por defecto a 1
+	- Con --model el tipo de modelo a cargar, 0 original, 1 KD, 2 Light, 3 Encoder, 4 decoder
 	
 2. test_onnx: para los ficheros onnx.
-- Con --test_batch_size el tamaño de batch, por defecto a 1
-- Con --model elegir entre "og" para modelo original en onnx, fp16 o int8
+	- Con --test_batch_size el tamaño de batch, por defecto a 1
+	- Con --model elegir entre "og" para modelo original en onnx, fp16 o int8
 
 ## Ficheros train
 Ficheros train, se guarda fichero log, gráficas de loss y el modelo después de cada época:
@@ -27,8 +27,8 @@ Convierte el modelo indicado a onnx y aplica cuantificación, descomentar llamad
 ## Video
 Fichero video_test.
 Pulsar tecla "q" para cerrar los videos
-- Con --video indicar nombre del video (solo {nombre}.mp4, la ruta es siempre ../videos
+	- Con --video indicar nombre del video (solo {nombre}.mp4, la ruta es siempre ../videos
 Igual que en test_metrics para lo demás:
-- Con --model se elige qué modelos cargar: 0 para original, 1 para KD, 2 para ligero, 3 encoder, 4 decoder.
+	- Con --model se elige qué modelos cargar: 0 para original, 1 para KD, 2 para ligero, 3 encoder, 4 decoder.
 Por defecto es 0, originales
 
