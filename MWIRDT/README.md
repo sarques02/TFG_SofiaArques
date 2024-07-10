@@ -1,4 +1,4 @@
-Multi-weather Image Restoration via Domain Translation.
+**Multi-weather Image Restoration via Domain Translation**
 
 In this folder you will find the codes for ONNX conversion, quantization, Knowledge Distillation training and testing for both pytorch models and ONNX models.
 The base network and code are taken from: https://github.com/pwp1208/Domain_Translation_Multi-weather_Restoration
@@ -16,7 +16,7 @@ Dos ficheros de test, los dos guardan las imágenes de resultado y generan fiche
 		- Con --dataset se indica el path al dataset, por defecto smaller_test
 		
 	2. test_onnx: Evaluación de los .onnx
-		Cambiar variable type_net para usar modelos originales en onnx (og), fp16 o int8 
+		Cambiar variable type_net para usar modelos originales en onnx (og), fp16, int8, KD o pruning
 
 Dos ficheros de entrenamiento, guardan los modelos y crean un log con métricas y tiempo.
 	1. train_kd: Entrenamiento por Knowledge Distillation
