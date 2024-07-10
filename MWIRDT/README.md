@@ -9,10 +9,8 @@ Dos ficheros de test, los dos guardan las imágenes de resultado y generan fiche
 		- Con --models se elige qué modelos cargar: 
 			0 para los originales, 1 para los KD, 2 para los ligeros.
 			Por defecto es 0, originales
-		
 		- Con --factor se indica el factor por el que se divide. 
 			Por defecto 4 si es kd o ligero, 1 si es original (se pone solo para los originales)
-			
 		- Con --dataset se indica el path al dataset, por defecto smaller_test
 		
 	2. test_onnx: Evaluación de los .onnx
@@ -23,7 +21,6 @@ Dos ficheros de entrenamiento, guardan los modelos y crean un log con métricas 
 		Hace falta carpeta "datasets" con train y test dentro. 
 		Tiene Early stopping con paciencia 5 épocas y margen (min delta) 0.001
 			si se quiere cambiar, buscar variables dentro del código.
-			
 		- Con --network se decide qué red entrenar: 1 niebla, 2 lluvia o 3 nieve
 		- Con --factor el factor por el que reducir
 		- Con --batch_size el batch_size de entrenamiento y validación
@@ -38,6 +35,5 @@ Fichero video_test.
 	- Con --models se elige qué modelos cargar: 
 		0 para los originales, 1 para los KD, 2 para los ligeros.
 		Por defecto es 0, originales
-		
 	- Con --factor se indica el factor por el que se divide. 
 		Por defecto 4 si es kd o ligero, 1 si es original (se pone solo para los originales)
