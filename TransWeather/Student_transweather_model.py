@@ -816,7 +816,7 @@ class Student_Transweather(nn.Module):
         x2 = self.Tdec(x1)
         x = self.convtail(x1,x2)
         clean = self.active(self.clean(x))
-        return clean
+        return clean, x1, x2
 
     def load(self, path):
         """
@@ -828,6 +828,5 @@ class Student_Transweather(nn.Module):
         self.load_state_dict(checkpoint_state_dict_noprefix, strict=False)
         del checkpoint
         torch.cuda.empty_cache()
-
 
 

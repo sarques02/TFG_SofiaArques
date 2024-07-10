@@ -10,14 +10,11 @@ import numpy as np
 import random
 from transweather_model import Transweather
 
-
-
-
 #Cambiar paths:
 #Es el path al fichero de texto dentro de smaller_test
-val_filename = '../data/smaller_test/allweather.txt' 
+val_filename = '../../tfg_sofia/smaller_test/allweather.txt' 
 model = 'best_model'
-save_path =('./Pruning/')
+save_path =('./resultados/Pruning/')
 
 # --- Parse hyper-parameters  --- #
 parser = argparse.ArgumentParser(description='Hyper-parameters for network')
@@ -97,8 +94,6 @@ inspect_weights(net_pruned)
 if not os.path.exists(save_path):     
     os.makedirs(save_path)
 
-# List of images to save
-saved_images = {"17_R_rain.jpg", '25_R_rain.jpg', '24_rain.png', '130_rain.png', '123_rain.png', 'haze_0003_s100_a04.png', 'haze_0005_s100_a04.png', 'haze_0011_s80_a05.png', 'haze_0013_s85_a06.png', 'haze_0014_s80_a04.png', 'snow_00018.jpg', 'snow_00075.jpg', 'snow_00148.jpg', 'snow_00202.jpg', 'snow_00270.jpg'}
 
 # Function to save test images
 def save_test_image(dehaze, image_name):
@@ -106,8 +101,7 @@ def save_test_image(dehaze, image_name):
     batch_num = len(dehaze_images)    
     for ind in range(batch_num):
         image_basename = os.path.basename(image_name[ind])
-        if image_basename in saved_images:
-            utils.save_image(dehaze_images[ind], '{}/{}'.format(save_path, image_basename[:-3] + 'png'))
+        utils.save_image(dehaze_images[ind], '{}/{}'.format(save_path, image_basename[:-3] + 'png'))
 
 # Function to calculate PSNR
 def calculate_psnr(dehaze, gt):
@@ -146,6 +140,8 @@ for batch_id, val_data in tqdm(enumerate(val_data_loader)):
         gt = gt.to(device)
         start_time = time.time()
         dehaze = net_pruned(haze)
+        if isinstance(dehaze, tuple):
+            dehaze = dehaze[0]
         end_time = time.time() - start_time
 
         mse, psnr = calculate_psnr(dehaze, gt)

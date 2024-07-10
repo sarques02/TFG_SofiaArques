@@ -848,7 +848,7 @@ class Transweather(nn.Module):
 
         clean = self.active(self.clean(x))
 
-        return clean
+        return clean, x1, x2
 
     def load(self, path):
         """
@@ -860,5 +860,4 @@ class Transweather(nn.Module):
         self.load_state_dict(checkpoint_state_dict_noprefix, strict=False)
         del checkpoint
         torch.cuda.empty_cache()
-
 

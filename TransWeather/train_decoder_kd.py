@@ -19,8 +19,8 @@ from collections import OrderedDict
 from torch.optim.lr_scheduler import StepLR
 
 
-from Decoder_transweather_model import Transweather
-from Decoder_Student_transweather_model import Student_Transweather
+from transweather_model import Transweather
+from Student_transweather_model import Student_Transweather
 
 plt.switch_backend('agg')
 
@@ -93,7 +93,7 @@ for name, param in student.named_parameters():
     print(name, param.requires_grad)
 
 date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-save_folder_path = f"student_checkpoints/Decoder/{date}"
+save_folder_path = f"Student_checkpoints/Decoder/{date}"
 if not os.path.exists(save_folder_path):
         os.makedirs(save_folder_path) 
 
@@ -137,6 +137,12 @@ def tenc_loss(student_outputs, teacher_outputs):
     total_loss = sum(losses) / len(losses)
     return total_loss
 
+
+def brightness_penalty(pred_image, factor=0.1):
+    mean_pixel_value = pred_image.mean()
+    penalty = torch.clamp((0.5 - mean_pixel_value) ** 2, min=0)
+    return factor * penalty
+
 def batch_PSNR(img1, img2, data_range):
     """Calcula el PSNR para un batch de imágenes.
     
@@ -162,12 +168,12 @@ def train_student(student, teacher, optimizer, train_loader, device, T=3):
         input_image = input_image.to(device)
         gt = gt.to(device)
 
-        student_pred_image, student_encoder = student(input_image)
+        student_pred_image, _, student_decoder = student(input_image)
         with torch.no_grad():
-            teacher_pred_image, teacher_encoder = teacher(input_image)
+            teacher_pred_image, _, teacher_decoder = teacher(input_image)
 
-        soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image)
-        tenc_l = tenc_loss(student_encoder, teacher_encoder)
+        soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image) + brightness_penalty(student_pred_image)
+        tenc_l = tenc_loss(student_decoder, teacher_decoder)
         loss = soft_targets_loss + lambda_loss * tenc_l
 
         optimizer.zero_grad()
@@ -188,13 +194,15 @@ def validate(student, teacher, val_data_loader, device):
             input_image = input_image.to(device)
             gt = gt.to(device)
 
-            student_pred_image, _ = student(input_image)
-            teacher_pred_image, _ = teacher(input_image)
+            student_pred_image, _, student_decoder = student(input_image)
+            teacher_pred_image, _, teacher_decoder = teacher(input_image)
 
-            val_loss = mse_loss(student_pred_image, gt)
+            soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image) + brightness_penalty(student_pred_image)
+            tenc_l = tenc_loss(student_decoder, teacher_decoder)
+            val_loss = soft_targets_loss + lambda_loss * tenc_l
             total_val_loss += val_loss.item()
 
-            psnr = batch_PSNR(student_pred_image, gt, 1.0)  # Usando la función definida
+            psnr = batch_PSNR(student_pred_image, gt, 1.0)
             total_psnr += psnr
 
         avg_psnr = total_psnr / len(val_data_loader)
@@ -220,13 +228,13 @@ for epoch in range(num_epochs):
           .format(epoch + 1, num_epochs, one_epoch_time, loss, avg_val_loss, avg_psnr))
 
     print_log(epoch + 1, num_epochs, one_epoch_time, date, loss, avg_val_loss)
-    torch.save(student.state_dict(), f"{save_folder_path}/Decoderstudent_epoch_{epoch+1}.pth")
-torch.save(student.state_dict(), f"{save_folder_path}/Decoderstudent_final.pth")
+    torch.save(student.state_dict(), f"{save_folder_path}/Decoder_student_epoch_{epoch+1}.pth")
+torch.save(student.state_dict(), f"{save_folder_path}/Decoder_student_final.pth")
 
 time_elapsed = time.time() - since
 print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
-
+val_loss = [loss.cpu().item() for loss in val_loss if loss.is_cuda]
 plt.figure(figsize=(10, 5))
 plt.plot(np.array(train_loss), label='Training loss')
 plt.plot(np.array(val_loss), label='Evaluation loss')

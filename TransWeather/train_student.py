@@ -120,7 +120,7 @@ val_data_loader1 = DataLoader(ValData(val_data_dir,val_filename1), batch_size=va
 # --- Previous PSNR and SSIM in testing --- #
 net.eval()
 date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-save_folder_path = './BasicTraining_Student/{}'.format(date)
+save_folder_path = './student_checkpoints/LightModel/{}'.format(date)
 if not os.path.exists(save_folder_path):
         os.makedirs(save_folder_path)
 net.train()
@@ -145,7 +145,7 @@ def eval(net, val_data_loader, device, save_tag=False):
             # print(haze.shape, gt.shape)  
             haze = haze.to(device)
             gt = gt.to(device)
-            dehaze = net(haze)
+            dehaze, _, _ = net(haze)
 
         # --- Calculate the average PSNR --- #
         psnr_list.extend(to_psnr(dehaze, gt))
@@ -192,7 +192,7 @@ for epoch in tqdm(range(epoch_start,num_epochs)):
         optimizer.zero_grad()
         # --- Forward + Backward + Optimize --- #
         net.train()
-        pred_image = net(input_image)
+        pred_image, _, _ = net(input_image)
 
         smooth_loss = F.smooth_l1_loss(pred_image, gt)
         perceptual_loss = loss_network(pred_image, gt)
@@ -257,5 +257,5 @@ plt.title('Training and Evaluation loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend()
-plt.savefig(f"student_model_epoch_{date}.png")
+plt.savefig(f"LightModel_{date}.png")
 plt.show()

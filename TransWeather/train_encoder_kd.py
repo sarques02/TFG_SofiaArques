@@ -19,8 +19,8 @@ from collections import OrderedDict
 from torch.optim.lr_scheduler import StepLR
 
 
-from Encoder_transweather_model import Transweather
-from Encoder_Student_transweather_model import Student_Transweather
+from transweather_model import Transweather
+from Student_transweather_model import Student_Transweather
 
 plt.switch_backend('agg')
 
@@ -34,7 +34,7 @@ parser.add_argument('--lambda_loss', help='Set the lambda in loss function', def
 parser.add_argument('--val_batch_size', help='Set the validation/test batch size', default=64, type=int)
 parser.add_argument('--exp_name', help='directory for saving the networks of the experiment', default="exp1", type=str)
 parser.add_argument('--seed', help='set random seed', default=42, type=int)
-parser.add_argument('--num_epochs', help='number of epochs', default=200, type=int)  # Reduced epochs for faster experiments
+parser.add_argument('--num_epochs', help='number of epochs', default=1, type=int)  # Reduced epochs for faster experiments
 
 args = parser.parse_args()
 
@@ -77,24 +77,24 @@ teacher.load_state_dict(state_dict)
 
 student = Student_Transweather()
 state_dict_to_load = {k: v for k, v in state_dict_teacher.items() if not k.startswith('module.Tenc')}
-# for k in state_dict_to_load:
-#     print(f'Se seleccionó la clave: {k}')
 student.load_state_dict(state_dict_to_load, strict=False)
 student = nn.DataParallel(student, device_ids=device_ids)
 teacher.eval()
 student.train()
 
 layer_view = 0
+
+#Congela todas las capas menos las que contengan el nombre Tenc        
 for name, param in student.named_parameters():
-    if name == "module.Tenc.norm4.bias":
-        layer_view = 1
-        continue
-    if layer_view == 1:
+    if "Tenc" in name:
+        param.requires_grad = True
+    else:
         param.requires_grad = False
-    # print(name, param.requires_grad)
+    print(name, param.requires_grad)
+#-------------#
 
 date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-save_folder_path = f"student_checkpoints/{date}"
+save_folder_path = f"Student_checkpoints/Encoder/{date}"
 if not os.path.exists(save_folder_path):
         os.makedirs(save_folder_path) 
 
@@ -117,7 +117,7 @@ optimizer = torch.optim.Adam(student.parameters(), lr=learning_rate)
 def print_log(epoch, num_epochs, one_epoch_time, date, loss_eval, loss_train):
     one_epoch_time = float(one_epoch_time)
     # --- Write the training log --- #
-    with open(f"{save_folder_path}/KD_Student_log_{date}.txt", 'a') as f:
+    with open(f"{save_folder_path}/EncoderTraining_log_{date}.txt", 'a') as f:
         print('Epoch: [{2}/{3}], Date: {0}s, Time_Cost: {1:.0f}s, Loss Eval: {4}, Loss Train: {5}'
               .format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                       one_epoch_time, epoch, num_epochs, loss_eval, loss_train), file=f)
@@ -136,6 +136,12 @@ def tenc_loss(student_outputs, teacher_outputs):
     total_loss = sum(losses) / len(losses)
     return total_loss
 
+#Penalización de brillo bajo
+def brightness_penalty(pred_image, factor=0.1):
+    mean_pixel_value = pred_image.mean()
+    penalty = torch.clamp((0.5 - mean_pixel_value) ** 2, min=0)
+    return factor * penalty
+
 def batch_PSNR(img1, img2, data_range):
     """Calcula el PSNR para un batch de imágenes.
     
@@ -152,7 +158,7 @@ def batch_PSNR(img1, img2, data_range):
     psnr = 10 * torch.log10(data_range**2 / mse_per_image)
     return psnr.mean().item()
 
-def train_student(student, teacher, optimizer, train_loader, device, T=3):
+def train_student(student, teacher, optimizer, train_loader, device):
     student.train()
     total_loss_train = 0.0
 
@@ -161,9 +167,9 @@ def train_student(student, teacher, optimizer, train_loader, device, T=3):
         input_image = input_image.to(device)
         gt = gt.to(device)
 
-        student_pred_image, student_encoder = student(input_image)
+        student_pred_image, student_encoder, _ = student(input_image)
         with torch.no_grad():
-            teacher_pred_image, teacher_encoder = teacher(input_image)
+            teacher_pred_image, teacher_encoder,_ = teacher(input_image)
 
         soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image) + brightness_penalty(student_pred_image)
         tenc_l = tenc_loss(student_encoder, teacher_encoder)
@@ -189,10 +195,10 @@ def validate(student, teacher, val_data_loader, device):
             input_image = input_image.to(device)
             gt = gt.to(device)
 
-            student_pred_image, student_encoder = student(input_image)
-            teacher_pred_image, teacher_encoder = teacher(input_image)
+            student_pred_image, student_encoder, _ = student(input_image)
+            teacher_pred_image, teacher_encoder, _ = teacher(input_image)
 
-            soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image)
+            soft_targets_loss = mse_loss(student_pred_image, teacher_pred_image) + brightness_penalty(student_pred_image)
             tenc_l = tenc_loss(student_encoder, teacher_encoder)
             hard_targets = mse_loss(student_pred_image, gt)
             loss = 0.3 * soft_targets_loss + 0.3 * tenc_l + 0.4 * hard_targets
@@ -245,7 +251,7 @@ time_elapsed = time.time() - since
 print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
 
-# val_loss = [loss.cpu().item() for loss in val_loss]
+val_loss = [loss.cpu().item() for loss in val_loss if loss.is_cuda]
 # train_losses = [loss.cpu().item() for loss in train_losses]
 # Graficar los resultados
 plt.figure(figsize=(10, 5))
@@ -255,5 +261,5 @@ plt.title('Training and Evaluation loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend()
-plt.savefig(f"student_model_epoch_{date}.png")
+plt.savefig(f"Encoder_{date}.png")
 plt.show()

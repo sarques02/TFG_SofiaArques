@@ -79,7 +79,7 @@ student.train()
 ####### ------------------------------ #######
 
 date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-save_folder_path = f"student_checkpoints/{date}"
+save_folder_path = f"student_checkpoints/KD/{date}"
 if not os.path.exists(save_folder_path):
         os.makedirs(save_folder_path) 
 
@@ -111,8 +111,8 @@ def train_student(student, teacher, optimizer, train_loader, device, T=2):
         optimizer.zero_grad() #Antes loss.backward!
         
         with torch.no_grad():
-            teacher_pred_image = teacher(input_image)
-        student_pred_image = student(input_image)
+            teacher_pred_image, _, _ = teacher(input_image)
+        student_pred_image, _, _ = student(input_image)
 
         soft_targets = nn.functional.softmax(teacher_pred_image / T, dim=-1)
         soft_prob = nn.functional.log_softmax(student_pred_image / T, dim=-1)
@@ -147,8 +147,8 @@ def eval_student(student, teacher, val_data_loader, device, T=2):
         gt = gt.to(device)
 
         with torch.no_grad():
-            teacher_pred_image = teacher(input_image)
-            student_pred_image = student(input_image)
+            teacher_pred_image, _, _ = teacher(input_image)
+            student_pred_image,_, _ = student(input_image)
             soft_targets = nn.functional.softmax(teacher_pred_image / T, dim=-1)
             soft_prob = nn.functional.log_softmax(student_pred_image / T, dim=-1)
 
@@ -183,7 +183,7 @@ for epoch in tqdm(range(epoch_start,num_epochs)):
     train_loss, train_psnr, train_ssim = train_student(student, teacher, optimizer, train_data_loader, device)
     student.eval()
     eval_loss, eval_psnr, eval_ssim = eval_student(student, teacher, val_data_loader, device)
-    torch.save(student.state_dict(), '{}/student_epoch{}_loss'.format(save_folder_path, epoch))
+    torch.save(student.state_dict(), '{}/KDstudent_epoch{}_loss'.format(save_folder_path, epoch))
     
     train_psnrs.append(train_psnr)
     eval_psnrs.append(eval_psnr)
@@ -225,7 +225,7 @@ with open(f"results_file_{date}", "w") as results_file:
         results_file.write(f"Training SSIM: {train_ssims[i]}\n")
 
 
-eval_losses = [loss.cpu().item() for loss in eval_losses]
+eval_losses = [loss.cpu().item() for loss in eval_losses if loss.is_cuda]
 # train_losses = [loss.cpu().item() for loss in train_losses]
 # Graficar los resultados
 plt.figure(figsize=(10, 5))
@@ -235,5 +235,5 @@ plt.title('Training and Evaluation loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend()
-plt.savefig(f"student_model_epoch_{date}.png")
+plt.savefig(f"KD_student_model_epoch_{date}.png")
 plt.show()
