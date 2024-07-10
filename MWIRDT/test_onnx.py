@@ -5,7 +5,7 @@ from dataset_test import DatasetFromFolder_Test
 import torch
 from torch.utils.data import DataLoader
 from os.path import join
-from utils import is_image_file, load_img, save_img
+from utils import save_img
 torch.backends.cudnn.benchmark = True
 from metrics import *
 import time
@@ -33,12 +33,12 @@ print(opt)
 
 tiempos_imagenes = {}
 
-type_net = "og" ## Elegir entre: og (original), fp16, int8
+type_net = "og" ## Elegir entre: og (original), fp16, int8, KD, pruning
 
 onnx_path = './onnx_models'
 
-onnx.load(f'{onnx_path}/domain_gpu.onnx')
-ort_sess = ort.InferenceSession(f'{onnx_path}/domain_gpu.onnx')
+onnx.load(f'{onnx_path}/domain.onnx')
+ort_sess = ort.InferenceSession(f'{onnx_path}/domain.onnx')
 
 d1_path = f'{onnx_path}/{type_net}/domain1_{type_net}.onnx'
 d2_path = f'{onnx_path}/{type_net}/domain2_{type_net}.onnx'
