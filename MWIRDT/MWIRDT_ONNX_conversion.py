@@ -19,11 +19,10 @@ from collections import OrderedDict
 from test import *
 
 from network_restoration import *
-import network_haze as net1
-import network_rain as net2
-import network_snow as net3
+import network_model1 as net1
+import network_model2 as net2
+import network_model3 as net3
 
-print("1")
 # import torch.onnx
 # from torchvision.ops.deform_conv import DeformConv2d
 import deform_conv2d_onnx_exporter
@@ -40,24 +39,18 @@ dummy_input_4 = torch.rand((1, 3, 256, 256)).cuda()
 deform_conv2d_onnx_exporter.register_deform_conv2d_onnx_op()
 
 def to_onnx(net=1):
-    if net == 0:
-        net = ''
-        pesos = './checkpoints/netG_model.pth'
-        clase = restore_net()
-        print("Seleccionada red de restauración")
-
-    elif net ==1:
-        pesos='./checkpoints/domain1.pth'
+    if net ==1:
+        pesos='./checkpoints_originales/domain1.pth'
         clase = net1.My_net()
         print("Seleccionado el modelo 1")
 
     elif net == 2:
-        pesos='./checkpoints/domain1.pth'
+        pesos='./checkpoints_originales/domain1.pth'
         clase = net2.My_net()
         print("Seleccionado el modelo 2")
 
-    elif net == 3:
-        pesos='./checkpoints/domain1.pth'
+    else:
+        pesos='./checkpoints_originales/domain1.pth'
         clase = net3.My_net()
         print("Seleccionado el modelo 3")
 
@@ -120,7 +113,7 @@ def to_onnx_restoration():
     ### Export ###
     torch.onnx.export(modelo.cuda(),    # model being run 
         (dummy_input_1, dummy_input_2, dummy_input_3, dummy_input_4),  # model input (or a tuple for multiple inputs) 
-        f"{nombre}_gpu.onnx",               # where to save the model
+        f"{nombre}_og.onnx",               # where to save the model
         export_params=True,             # store the trained parameter weights inside the model file 
         opset_version=16,               # the ONNX version to export the model to 
         do_constant_folding=True,       # whether to execute constant folding for optimization 
@@ -133,28 +126,30 @@ def to_onnx_restoration():
     print('Model has been converted to ONNX')
 
 def to_fp16(numero, nombre = nombre):
-    model = onnx.load(f"{nombre}{numero}_gpu.onnx")
+    model = onnx.load(f"{nombre}{numero}.onnx")
     # os.system(f'python -m onnxruntime.quantization.preprocess --input {model} --output domain{numero}_infer_gpu.onnx')
     model_fp16 = float16.convert_float_to_float16(model)
-    modeloo = onnx.load(f'{model}_infer_gpu.onnx')
-    onnx.save(model_fp16, f"{nombre}{numero}_fp16_gpu.onnx")
+    modeloo = onnx.load(f'{model}_infer.onnx')
+    onnx.save(model_fp16, f"{nombre}{numero}_fp16.onnx")
     print('Model has been quantized to fp16')
 
 def to_int8(net):
-    model_path = f"{nombre}{net}_gpu.onnx"
-    quantize_dynamic(model_path, f"{nombre}{net}_int8_gpu.onnx", weight_type=QuantType.QUInt8)
+    model_path = f"{nombre}{net}.onnx"
+    quantize_dynamic(model_path, f"{nombre}{net}_int8.onnx", weight_type=QuantType.QUInt8)
 
-# to_onnx_restoration()
+
+
+to_onnx_restoration()
 # to_onnx(1)
 # to_onnx(2)
 # to_onnx(3)
 
-# to_fp16('')
+to_fp16('')
 # to_fp16(1)
 # to_fp16(2)
 # to_fp16(3)
 
 to_int8('')
-to_int8(1)
-to_int8(2)
-to_int8(3)
+# to_int8(1)
+# to_int8(2)
+# to_int8(3)
